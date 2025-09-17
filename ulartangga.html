@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Ular Tangga 2 Pemain</title>
+		<style>
+			body {
+				font-family: sans-serif;
+				text-align: center;
+				background: #f5f5f5;
+				margin: 0;
+				padding: 20px;
+			}
+			h1 {
+				color: #2c3e50;
+			}
+			#board-wrap {
+				position: relative;
+				width: 500px;
+				height: 500px;
+				margin: 20px auto;
+			}
+			#board {
+				display: grid;
+				grid-template-columns: repeat(10, 1fr);
+				grid-template-rows: repeat(10, 1fr);
+				width: 100%;
+				height: 100%;
+				border: 3px solid #333;
+				background: #fafafa;
+			}
+			.cell {
+				border: 1px solid #aaa;
+				font-size: 11px;
+				display: flex;
+				align-items: flex-start;
+				justify-content: flex-end;
+				padding: 2px;
+				position: relative;
+			}
+			.player {
+				width: 20px;
+				height: 20px;
+				border-radius: 50%;
+				position: absolute;
+				transition: all 0.3s linear;
+			}
+			.p1 {
+				background: red;
+			}
+			.p2 {
+				background: blue;
+			}
+			#overlay {
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				pointer-events: none;
+			}
+			#controls {
+				margin-top: 20px;
+			}
+			#dice {
+				font-size: 24px;
+				margin: 10px;
+			}
+			#status {
+				margin-top: 10px;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>🎲 Game Ular Tangga by Faiz Yusa Saidalvi</h1>
+		<div id="board-wrap">
+			<div id="board"></div>
+			<svg id="overlay" viewBox="0 0 500 500"></svg>
+			<!-- bidak pemain ditempel di atas papan -->
+			<div id="p1" class="player p1"></div>
+			<div id="p2" class="player p2"></div>
+		</div>
+
+		<div id="controls">
+			<button style="height: 100px; font-size: 20px" onclick="rollDice()">
+				🎲 Lempar Dadu
+			</button>
+			<div id="dice">-</div>
+			<div id="status">Giliran: Pemain 1 (Merah)</div>
+		</div>
+
+		<script>
+			const boardEl = document.getElementById("board");
+			const overlay = document.getElementById("overlay");
+			const diceEl = document.getElementById("dice");
+			const statusEl = document.getElementById("status");
+
+			const size = 10;
+			let players = [1, 1]; // posisi pemain
+			let turn = 0; // giliran
+			let busy = false; // cegah input saat animasi jalan
+
+			const snakes = {
+				99: 78,
+				95: 75,
+				92: 88,
+				74: 53,
+				64: 60,
+				62: 19,
+				49: 11,
+				46: 25,
+				16: 6,
+			};
+			const ladders = {
+				2: 38,
+				7: 14,
+				8: 31,
+				15: 26,
+				21: 42,
+				28: 84,
+				36: 44,
+				51: 67,
+				71: 91,
+				78: 98,
+				87: 94,
+			};
+
+			// koordinat pusat kotak (x,y)
+			function getCellCenter(pos) {
+				let row = Math.floor((pos - 1) / size);
+				let col = (pos - 1) % size;
+				if (row % 2 === 1) col = size - 1 - col;
+				let x = col * 50 + 25;
+				let y = (size - 1 - row) * 50 + 25;
+				return { x, y };
+			}
+
+			function buildBoard() {
+				boardEl.innerHTML = "";
+				overlay.innerHTML = "";
+				let reverse = false;
+				let num = 100;
+				for (let row = 0; row < size; row++) {
+					let rowNums = [];
+					for (let col = 0; col < size; col++) {
+						rowNums.push(num--);
+					}
+					if (reverse) rowNums.reverse();
+					reverse = !reverse;
+					rowNums.forEach((n) => {
+						let cell = document.createElement("div");
+						cell.className = "cell";
+						cell.innerHTML = n;
+						cell.id = "cell-" + n;
+						if (n % 2 == 0) {
+							//genap
+							cell.style.backgroundColor = "#aaa";
+						} else {
+							cell.style.backgroundColor = "#fff";
+						}
+						boardEl.appendChild(cell);
+					});
+				}
+
+				// tangga
+				// gambar tangga (dua sisi + pijakan)
+				for (let start in ladders) {
+					let end = ladders[start];
+					let p1 = getCellCenter(Number(start));
+					let p2 = getCellCenter(Number(end));
+
+					// buat vektor arah
+					let dx = p2.x - p1.x;
+					let dy = p2.y - p1.y;
+					let len = Math.sqrt(dx * dx + dy * dy);
+					let ux = dx / len,
+						uy = dy / len;
+
+					// geser ke kiri/kanan untuk sisi tangga
+					let offset = 10; // jarak antar sisi tangga
+					let ox = -uy * offset,
+						oy = ux * offset;
+
+					// sisi kiri
+					let left = document.createElementNS(
+						"http://www.w3.org/2000/svg",
+						"line"
+					);
+					left.setAttribute("x1", p1.x + ox);
+					left.setAttribute("y1", p1.y + oy);
+					left.setAttribute("x2", p2.x + ox);
+					left.setAttribute("y2", p2.y + oy);
+					left.setAttribute("stroke", "#000");
+					left.setAttribute("stroke-width", "4");
+					overlay.appendChild(left);
+
+					// sisi kanan
+					let right = document.createElementNS(
+						"http://www.w3.org/2000/svg",
+						"line"
+					);
+					right.setAttribute("x1", p1.x - ox);
+					right.setAttribute("y1", p1.y - oy);
+					right.setAttribute("x2", p2.x - ox);
+					right.setAttribute("y2", p2.y - oy);
+					right.setAttribute("stroke", "#000");
+					right.setAttribute("stroke-width", "4");
+					overlay.appendChild(right);
+
+					// pijakan (garis horizontal di antara)
+					let steps = 5;
+					for (let i = 1; i < steps; i++) {
+						let t = i / steps;
+						let cx = p1.x + dx * t;
+						let cy = p1.y + dy * t;
+						let rung = document.createElementNS(
+							"http://www.w3.org/2000/svg",
+							"line"
+						);
+						rung.setAttribute("x1", cx + ox);
+						rung.setAttribute("y1", cy + oy);
+						rung.setAttribute("x2", cx - ox);
+						rung.setAttribute("y2", cy - oy);
+						rung.setAttribute("stroke", "#999");
+						rung.setAttribute("stroke-width", "3");
+						overlay.appendChild(rung);
+					}
+				}
+
+				// gambar ulat (path bergelombang)
+				// gambar ulat/ular (path bergelombang + kepala/ekor)
+				for (let head in snakes) {
+					let tail = snakes[head];
+					let p1 = getCellCenter(Number(head));
+					let p2 = getCellCenter(Number(tail));
+
+					let dx = p2.x - p1.x;
+					let dy = p2.y - p1.y;
+					let segments = 6; // jumlah gelombang
+					let pathData = `M${p1.x},${p1.y}`;
+
+					for (let i = 1; i <= segments; i++) {
+						let t = i / segments;
+						let cx = p1.x + dx * t;
+						let cy = p1.y + dy * t;
+						let offset = i % 2 === 0 ? 15 : -15;
+						pathData += ` Q${cx + offset},${cy - offset} ${cx},${cy}`;
+					}
+
+					// tubuh ular/ulat
+					let path = document.createElementNS(
+						"http://www.w3.org/2000/svg",
+						"path"
+					);
+					path.setAttribute("d", pathData);
+					path.setAttribute("stroke", "orange");
+					path.setAttribute("stroke-width", "6");
+					path.setAttribute("fill", "none");
+					path.setAttribute("stroke-linecap", "round");
+					overlay.appendChild(path);
+
+					// kepala bulat (lebih kecil + ada stroke)
+					let headCircle = document.createElementNS(
+						"http://www.w3.org/2000/svg",
+						"circle"
+					);
+					headCircle.setAttribute("cx", p1.x);
+					headCircle.setAttribute("cy", p1.y);
+					headCircle.setAttribute("r", 7); // diperkecil (dulu 12)
+					headCircle.setAttribute("fill", "#fff");
+					headCircle.setAttribute("stroke", "#000"); // tambahkan stroke
+					headCircle.setAttribute("stroke-width", "1");
+					overlay.appendChild(headCircle);
+
+					// mata kiri
+					let eyeL = document.createElementNS(
+						"http://www.w3.org/2000/svg",
+						"circle"
+					);
+					eyeL.setAttribute("cx", p1.x - 4);
+					eyeL.setAttribute("cy", p1.y - 2);
+					eyeL.setAttribute("r", 3);
+					eyeL.setAttribute("fill", "#000");
+					eyeL.setAttribute("stroke", "#fff"); // tambahkan stroke
+					eyeL.setAttribute("stroke-width", "2");
+					overlay.appendChild(eyeL);
+
+					// mata kanan
+					let eyeR = document.createElementNS(
+						"http://www.w3.org/2000/svg",
+						"circle"
+					);
+					eyeR.setAttribute("cx", p1.x + 4);
+					eyeR.setAttribute("cy", p1.y - 6);
+					eyeR.setAttribute("r", 3);
+					eyeR.setAttribute("fill", "#000");
+					eyeR.setAttribute("stroke", "#fff"); // tambahkan stroke
+					eyeR.setAttribute("stroke-width", "2");
+					overlay.appendChild(eyeR);
+
+					// ekor bulat kecil
+					let tailCircle = document.createElementNS(
+						"http://www.w3.org/2000/svg",
+						"circle"
+					);
+					tailCircle.setAttribute("cx", p2.x);
+					tailCircle.setAttribute("cy", p2.y);
+					tailCircle.setAttribute("r", 5);
+					tailCircle.setAttribute("fill", "#fff");
+					// tailCircle.setAttribute("stroke", "#d2691e");
+					// tailCircle.setAttribute("stroke-width", "1.5");
+					overlay.appendChild(tailCircle);
+				}
+			}
+
+			// update posisi token dengan animasi
+			function moveToken(player, pos) {
+				let token = document.getElementById("p" + (player + 1));
+				let { x, y } = getCellCenter(pos);
+				token.style.left = x - 10 + "px"; // center token (20px / 2)
+				token.style.top = y - 10 + "px";
+			}
+
+			// animasi bergerak langkah demi langkah
+			async function animateMove(player, target) {
+				busy = true;
+				while (players[player] < target) {
+					// console.log(player + "," + target);
+					players[player]++;
+					moveToken(player, players[player]);
+					await new Promise((r) => setTimeout(r, 400)); // jeda 0.4s
+				}
+				while (players[player] > target) {
+					// console.log(player + "," + target);
+					players[player]--;
+					moveToken(player, players[player]);
+					await new Promise((r) => setTimeout(r, 400)); // jeda 0.4s
+				}
+				// cek ular/tangga
+				let pos = players[player];
+				if (ladders[pos]) {
+					players[player] = ladders[pos];
+					moveToken(player, players[player]);
+					statusEl.textContent = "Pemain " + (player + 1) + " naik tangga!";
+				} else if (snakes[pos]) {
+					players[player] = snakes[pos];
+					moveToken(player, players[player]);
+					statusEl.textContent = "Pemain " + (player + 1) + " digigit ular!";
+				}
+				busy = false;
+			}
+
+			function rollDice() {
+				if (busy) return;
+				let roll = Math.floor(Math.random() * 6) + 1;
+
+				function animateDice(finalNumber, duration = 1000, intervalTime = 50) {
+					let elapsed = 0;
+					const animInterval = setInterval(() => {
+						const randomNum = Math.floor(Math.random() * 6) + 1;
+						diceEl.textContent = "Dadu: " + randomNum; // tampilkan angka acak
+						elapsed += intervalTime;
+						if (elapsed >= duration) {
+							clearInterval(animInterval);
+							diceEl.textContent = "Dadu: " + finalNumber; // tampilkan angka final
+						}
+					}, intervalTime);
+				}
+
+				// const dices = animateDice(returned);
+				const finalNumber = roll; // tentukan angka final
+				animateDice(finalNumber);
+				diceEl.textContent = "Dadu: " + finalNumber;
+
+				let newPos = players[turn] + roll;
+				setTimeout(function () {
+					if (newPos > 100) {
+						// statusEl.textContent = "Lemparan terlalu besar!";
+						let poskelebihan = newPos - 100;
+						let poslebih = poskelebihan - poskelebihan - poskelebihan;
+						let finalpos = 100 + poslebih;
+						animateMove(turn, 100).then(() => {
+							// if (players[turn] === 100) {
+							// statusEl.textContent = "🎉 Pemain " + (turn + 1) + " MENANG!";
+							// busy = true;
+							// } else {
+							animateMove(turn, finalpos).then(() => {});
+
+							roll !== 6 ? switchTurn() : "";
+							// }
+						});
+					} else {
+						animateMove(turn, newPos).then(() => {
+							if (players[turn] === 100) {
+								statusEl.textContent = "🎉 Pemain " + (turn + 1) + " MENANG!";
+								busy = true;
+							} else {
+								roll !== 6 ? switchTurn() : "";
+							}
+						});
+					}
+				}, 1500);
+			}
+
+			function switchTurn() {
+				const bidakPemain = 1 - turn + 1;
+				statusEl.textContent =
+					" | Giliran Pemain " +
+					bidakPemain +
+					(bidakPemain == 1 ? " (Merah)" : "(Biru)");
+				turn = 1 - turn;
+			}
+
+			// inisialisasi
+			buildBoard();
+			moveToken(0, 1);
+			moveToken(1, 1);
+		</script>
+	</body>
+</html>
