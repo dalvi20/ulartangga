@@ -156,9 +156,9 @@
 						cell.id = "cell-" + n;
 						if (n % 2 == 0) {
 							//genap
-							cell.style.backgroundColor = "#aaa";
+							cell.style.backgroundColor = "#888";
 						} else {
-							cell.style.backgroundColor = "#ddd";
+							cell.style.backgroundColor = "#ccc";
 						}
 						boardEl.appendChild(cell);
 					});
@@ -255,7 +255,7 @@
 						"path"
 					);
 					path.setAttribute("d", pathData);
-					path.setAttribute("stroke", "orange");
+					path.setAttribute("stroke", "#000");
 					path.setAttribute("stroke-width", "6");
 					path.setAttribute("fill", "none");
 					path.setAttribute("stroke-linecap", "round");
@@ -277,26 +277,28 @@
 					// mata kiri
 					let eyeL = document.createElementNS(
 						"http://www.w3.org/2000/svg",
-						"circle"
+						"ellipse"
 					);
 					eyeL.setAttribute("cx", p1.x - 4);
 					eyeL.setAttribute("cy", p1.y - 2);
-					eyeL.setAttribute("r", 3);
+					eyeL.setAttribute("rx", "3");
+					eyeL.setAttribute("ry", "2.5");
 					eyeL.setAttribute("fill", "#000");
-					eyeL.setAttribute("stroke", "#fff"); // tambahkan stroke
+					eyeL.setAttribute("stroke", "#ccc"); // tambahkan stroke
 					eyeL.setAttribute("stroke-width", "2");
 					overlay.appendChild(eyeL);
 
 					// mata kanan
 					let eyeR = document.createElementNS(
 						"http://www.w3.org/2000/svg",
-						"circle"
+						"ellipse"
 					);
 					eyeR.setAttribute("cx", p1.x + 4);
-					eyeR.setAttribute("cy", p1.y - 6);
-					eyeR.setAttribute("r", 3);
+					eyeR.setAttribute("cy", p1.y + 0);
+					eyeR.setAttribute("rx", "3");
+					eyeR.setAttribute("ry", "2.5");
 					eyeR.setAttribute("fill", "#000");
-					eyeR.setAttribute("stroke", "#fff"); // tambahkan stroke
+					eyeR.setAttribute("stroke", "#ccc"); // tambahkan stroke
 					eyeR.setAttribute("stroke-width", "2");
 					overlay.appendChild(eyeR);
 
@@ -308,7 +310,7 @@
 					tailCircle.setAttribute("cx", p2.x);
 					tailCircle.setAttribute("cy", p2.y);
 					tailCircle.setAttribute("r", 5);
-					tailCircle.setAttribute("fill", "#fff");
+					tailCircle.setAttribute("fill", "#666");
 					// tailCircle.setAttribute("stroke", "#d2691e");
 					// tailCircle.setAttribute("stroke-width", "1.5");
 					overlay.appendChild(tailCircle);
@@ -420,4 +422,3 @@
 		</script>
 	</body>
 </html>
-
