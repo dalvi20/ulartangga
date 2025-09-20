@@ -97,6 +97,50 @@
 			const diceEl = document.getElementById("dice");
 			const statusEl = document.getElementById("status");
 
+			async function updateJSON() {
+			  const token = "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";
+			  const owner = "dalvi20";
+			  const repo = "ulartangga";
+			  const path = "savegame.json";
+			  const branch = "main";
+			
+			  // 1. Ambil isi lama + SHA
+			  let res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+			    headers: { Authorization: `token ${token}` }
+			  });
+			  let data = await res.json();
+			
+			  const sha = data.sha;
+			  const oldContent = atob(data.content);
+			  const jsonData = JSON.parse(oldContent);
+			
+			  // 2. Ubah JSON sesuai kebutuhan
+			  jsonData.lastUpdate = new Date().toISOString();
+			
+			  // 3. Encode kembali ke base64
+			  const newContent = btoa(JSON.stringify(jsonData, null, 2));
+			
+			  // 4. Commit perubahan
+			  res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+			    method: "PUT",
+			    headers: {
+			      Authorization: `token ${token}`,
+			      "Content-Type": "application/json"
+			    },
+			    body: JSON.stringify({
+			      message: "Update data.json via API",
+			      content: newContent,
+			      sha: sha,
+			      branch: branch
+			    })
+			  });
+			
+			  let result = await res.json();
+			  console.log("Hasil update:", result);
+			}
+			// updateJSON();
+
+
 			const size = 10;
 			let players = [1, 1]; // posisi pemain
 			let turn = 0; // giliran
@@ -422,3 +466,4 @@
 		</script>
 	</body>
 </html>
+
