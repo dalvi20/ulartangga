@@ -29,12 +29,17 @@
     li { margin-bottom: 10px; }
     .contact a { color: #0077b6; text-decoration: none; }
   </style>
+  <script>
+    let email = 'contohemail';
+    document.getElementById('email_text').href = email;
+    document.getElementById('email_text').innerText = email;
+  </script>
 </head>
 <body>
   <div class="container">
     <h1>Nama Lengkap Kamu</h1>
     <p class="contact">
-      📧 <a href="mailto:email@example.com">email@example.com</a><br>
+      📧 <a href="mailto:email@example.com" id="email_text">email@example.com</a><br>
       📞 +62 812-3456-7890<br>
       🌐 <a href="https://linkedin.com/in/namakamu">LinkedIn</a>
     </p>
