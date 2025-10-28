@@ -30,17 +30,19 @@
     .contact a { color: #0077b6; text-decoration: none; }
   </style>
   <script>
-    let email = 'contohemail';
+    const nama = 'Faiz Yusa Saidalvi';
+    const email = 'contohemail';
+    const noTelp = '+628286738736';
     
   </script>
 </head>
 <body>
   <div class="container">
-    <h1>Nama Lengkap Kamu</h1>
+    <h1 id="nama">Nama Lengkap Kamu</h1>
     <p class="contact">
-      📧 <a href="mailto:email@example.com" id="email_text">email@exmple.com</a><br>
-      📞 +62 812-3456-7890<br>
-      🌐 <a href="https://linkedin.com/in/namakamu">LinkedIn</a>
+      📧 <a href="mailto:email@example.com" id="email">email@exmple.com</a><br>
+      📞 <a href="https://wa.me/phone_number" id="noTelp">+62 812-3456-7890</a><br>
+      🌐 <a href="https://linkedin.com/in/namakamu" id="linkedIn">LinkedIn</a>
     </p>
 
     <h2>Profil</h2>
@@ -71,8 +73,16 @@
     </ul>
   </div>
   <script>
-    // document.getElementById('email_text').href = email;
-    document.getElementById('email_text').innerText = email;
+    document.getElementById('nama').href = nama;
+    
+    document.getElementById('email').href = email;
+    document.getElementById('email').innerText = email;
+
+    document.getElementById('noTelp').href = noTelp;
+    document.getElementById('noTelp').innerText = noTelp;
+
+    document.getElementById('linkedIn').href = linkedIn;
+    document.getElementById('linkedIn').innerText = linkedIn;
   </script>
 </body>
 </html>
